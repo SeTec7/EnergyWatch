@@ -1,0 +1,9 @@
+## Interface: 50400
+## Title: EnergyWatch
+## Version: 5.4.0
+## Notes: A mobile, configurable bar that tracks primary and secondary character resources
+## Author: OneWingedAngel
+## SavedVariablesPerCharacter: EnergyWatchConfig
+
+EnergyWatchUI.lua
+EnergyWatch.lua
