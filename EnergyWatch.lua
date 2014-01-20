@@ -32,6 +32,7 @@ function RegisteredEvents:ADDON_LOADED(event, addon, ...)
 		setmetatable(EnergyWatchConfig, {__index = DefaultConfig})
 
 		EnergyWatchUI.CreateEnergyBar()
+		EnergyWatchUI.CreateHealthBar()
 		EnergyWatchUI.CreateConfigMenu()
 		--print("EnergyWatch " .. GetAddOnMetadata("EnergyWatch","Version") .. " Loaded. Type /ew for usage")
 	end
@@ -60,7 +61,7 @@ end
 function RegisteredEvents:UNIT_COMBO_POINTS(event, unit)
 	if unit == "player" then
 		EnergyWatch.UpdateSpecPoints()
-		EnergyWatch.UpdateBar()
+		EnergyWatch.UpdateBar(EnergyWatchBar)
 	end
 end
 
@@ -75,8 +76,16 @@ function RegisteredEvents:UNIT_POWER(event, unit, power)
 		   power == "ECLIPSE" or
 		   power == "SHADOW_ORBS" then
 			EnergyWatch.UpdateSpecPoints()
-			EnergyWatch.UpdateBar()
+			EnergyWatch.UpdateBar(EnergyWatchBar)
 		end
+	end
+end
+
+function RegisteredEvents:UNIT_HEALTH(event, unit)
+	--print("Unit " .. unit .. " health changed")
+    if unit == "player" then
+		EnergyWatch.UpdateHealth()
+		EnergyWatch.UpdateBar(EnergyWatchHealthBar)
 	end
 end
 
@@ -84,8 +93,32 @@ function RegisteredEvents:UNIT_MAXPOWER(event, unit, power)
 	--print("UNIT_MAXPOWER fired")
 	if unit == "player" then
 		EnergyWatch.UpdateMaxEnergy()
-		EnergyWatch.UpdateBar()
+		EnergyWatch.UpdateBar(EnergyWatchBar)
 	end
+end
+
+function RegisteredEvents:UNIT_MAXHEALTH(event, unit)
+	--print("Unit " .. unit .. " max health changed")
+	if unit == "player" then
+		UnitFrameHealPredictionBars_Update(EnergyWatchHealthBar)
+		EnergyWatch.UpdateMaxHealth()
+		EnergyWatch.UpdateBar(EnergyWatchHealthBar)
+	end
+end
+
+function RegisteredEvents:UNIT_HEAL_PREDICTION(event)
+	--print("caught UNIT_HEAL_PREDICTION event")
+	UnitFrameHealPredictionBars_Update(EnergyWatchHealthBar)
+end
+
+function RegisteredEvents:UNIT_ABSORB_AMOUNT_CHANGED(event)
+	--print("caught UNIT_ABSORB_AMOUNT_CHANGED event")
+	UnitFrameHealPredictionBars_Update(EnergyWatchHealthBar)
+end
+
+function RegisteredEvents:UNIT_HEAL_ABSORB_AMOUNT_CHANGED(event)
+	--print("caught UNIT_HEAL_ABSORB_AMOUNT_CHANGED event")
+	UnitFrameHealPredictionBars_Update(EnergyWatchHealthBar)
 end
 
 function RegisteredEvents:UPDATE_STEALTH(event)
@@ -126,7 +159,9 @@ function EnergyWatch.InitializeBar()
 	--EnergyWatchBar:SetScale(EnergyWatch.GetConfigValue("barScale"))
 	EnergyWatch.UpdatePowerType()
 	EnergyWatch.UpdateMaxEnergy()
+	EnergyWatch.UpdateMaxHealth()
 	EnergyWatch.UpdateEnergy()
+	EnergyWatch.UpdateHealth()
 	EnergyWatch.UpdateSpecPoints()
 	EnergyWatch.ShowOrHideBar()
 	
@@ -137,29 +172,43 @@ function EnergyWatch.InitializeBar()
 end
 
 function EnergyWatch.OnUpdate(self, elapsed)
-	EnergyWatch.TIME_SINCE_LAST_UPDATE = EnergyWatch.TIME_SINCE_LAST_UPDATE + elapsed
+	--EnergyWatch.TIME_SINCE_LAST_UPDATE = EnergyWatch.TIME_SINCE_LAST_UPDATE + elapsed
 	--print("time = " .. EnergyWatch.TIME_SINCE_LAST_UPDATE)
-	while (EnergyWatch.TIME_SINCE_LAST_UPDATE > EnergyWatch.UPDATE_INTERVAL) do
+	--while (EnergyWatch.TIME_SINCE_LAST_UPDATE > EnergyWatch.UPDATE_INTERVAL) do
 		--print(EnergyWatch.TIME_SINCE_LAST_UPDATE)
 		EnergyWatch.UpdateEnergy()
-		EnergyWatch.UpdateBar()
+		EnergyWatch.UpdateHealth()
+		EnergyWatch.UpdateBar(EnergyWatchBar)
+		EnergyWatch.UpdateBar(EnergyWatchHealthBar)
+		UnitFrameHealPredictionBars_Update(EnergyWatchHealthBar)
 		EnergyWatch.ShowOrHideBar()
 		EnergyWatch.TIME_SINCE_LAST_UPDATE = EnergyWatch.TIME_SINCE_LAST_UPDATE - EnergyWatch.UPDATE_INTERVAL
-	end
-
+	--end
 end
 
 function EnergyWatch.UpdateEnergy()
-	EnergyWatch.curEnergy = UnitPower("player", EnergyWatch.powerType)
-	--print("Cur energy is " .. EnergyWatch.curEnergy)
+	EnergyWatchBar.cur = UnitPower("player", EnergyWatchBar.powerType)
+	--print("Cur energy is " .. EnergyWatchBar.cur)
+end
+
+function EnergyWatch.UpdateHealth()
+	EnergyWatchHealthBar.cur = UnitHealth("player")
+	--print("Cur health is " .. EnergyWatchHealthBar.cur)
 end
 
 function EnergyWatch.UpdateMaxEnergy()
 	--print("Updating max energy")
-	EnergyWatch.maxEnergy = UnitPowerMax("player", EnergyWatch.powerType)
-	--print("maxEnergy is " ..EnergyWatch.maxEnergy)
-	--print("powerType is " ..EnergyWatch.powerType)
-	EnergyWatchStatusBar:SetMinMaxValues(0, EnergyWatch.maxEnergy)
+	EnergyWatchBar.max = UnitPowerMax("player", EnergyWatchBar.powerType)
+	--print("Max energy is " ..EnergyWatchBar.max)
+	--print("powerType is " ..EnergyWatchBar.powerType)
+	EnergyWatchStatusBar:SetMinMaxValues(0, EnergyWatchBar.max)
+end
+
+function EnergyWatch.UpdateMaxHealth()
+	--print("Updating max health")
+	EnergyWatchHealthBar.max = UnitHealthMax("player")
+	--print("maxHealth is " ..EnergyWatchHealthBar.max)
+	EnergyWatchHealthStatusBar:SetMinMaxValues(0, EnergyWatchHealthBar.max)
 end
 
 function EnergyWatch.UpdateSpecPoints()
@@ -167,83 +216,83 @@ function EnergyWatch.UpdateSpecPoints()
 	local currentSpec = GetSpecialization()
 
 	if englishClass == "DRUID" then
-		if EnergyWatch.powerType == 3 then
-			EnergyWatch.specPoints = GetComboPoints("player")
+		if EnergyWatchBar.powerType == 3 then
+			EnergyWatchBar.specPoints = GetComboPoints("player")
 		elseif currentSpec == 1 then
-			EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_ECLIPSE)
+			EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_ECLIPSE)
 		else
-			EnergyWatch.specPoints = nil
+			EnergyWatchBar.specPoints = nil
 		end
 	elseif englishClass == "MONK" then
-		EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_CHI)
+		EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_CHI)
 	elseif englishClass == "PALADIN" then
-		EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_HOLY_POWER)
+		EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_HOLY_POWER)
 	elseif englishClass == "PRIEST" then
 		if currentSpec == 3 then --Shadow
-			EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_SHADOW_ORBS)
+			EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_SHADOW_ORBS)
 		else
-			EnergyWatch.specPoints = nil
+			EnergyWatchBar.specPoints = nil
 		end
 	elseif englishClass == "ROGUE" then
-		EnergyWatch.specPoints = GetComboPoints("player")
+		EnergyWatchBar.specPoints = GetComboPoints("player")
 	elseif englishClass == "WARLOCK" then
 		if currentSpec == 1 then --Affliction
-			EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_SOUL_SHARDS)
+			EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_SOUL_SHARDS)
 		elseif currentSpec == 2 then --Demonology
-			EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_DEMONIC_FURY)
+			EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_DEMONIC_FURY)
 		elseif currentSpec == 3 then --Destruction
-			EnergyWatch.specPoints = UnitPower("player", SPELL_POWER_BURNING_EMBERS)
+			EnergyWatchBar.specPoints = UnitPower("player", SPELL_POWER_BURNING_EMBERS)
 		else
-			EnergyWatch.specPoints = nil
+			EnergyWatchBar.specPoints = nil
 		end
 	else
-		EnergyWatch.specPoints = nil
+		EnergyWatchBar.specPoints = nil
 	end
 end
 
 function EnergyWatch.UpdatePowerType()
-	EnergyWatch.powerType = UnitPowerType("player")
-	local barColor = PowerBarColor[EnergyWatch.powerType]
+	EnergyWatchBar.powerType = UnitPowerType("player")
+	local barColor = PowerBarColor[EnergyWatchBar.powerType]
 
 	EnergyWatchStatusBar:SetStatusBarColor(barColor.r, barColor.g, barColor.b)
 end
 
-function EnergyWatch.UpdateBar()
+function EnergyWatch.UpdateBar(bar)
 	local text = ""
-	local energyPercentage = floor((EnergyWatch.curEnergy / EnergyWatch.maxEnergy) * 100)
+	local percentage = floor((bar.cur / bar.max) * 100)
 
-	if EnergyWatch.specPoints == nil then
-		text = EnergyWatch.GetConfigValue("barText")
-		text,_ = string.gsub(text,"&ep", energyPercentage)
-		text,_ = string.gsub(text,"&em", EnergyWatch.CapDisplayOfNumericValue(EnergyWatch.maxEnergy))
-		text,_ = string.gsub(text,"&e", EnergyWatch.CapDisplayOfNumericValue(EnergyWatch.curEnergy))
+	if bar.specPoints == nil then
+		text = EnergyWatch.GetConfigValue(bar.textConfig)
+		text,_ = string.gsub(text,"&ep", percentage)
+		text,_ = string.gsub(text,"&em", EnergyWatch.CapDisplayOfNumericValue(bar.max))
+		text,_ = string.gsub(text,"&e", EnergyWatch.CapDisplayOfNumericValue(bar.cur))
 	else 
-		text = EnergyWatch.GetConfigValue("barPointsText")
-		text,_ = string.gsub(text,"&ep", energyPercentage)
-		text,_ = string.gsub(text,"&em", EnergyWatch.CapDisplayOfNumericValue(EnergyWatch.maxEnergy))
-		text,_ = string.gsub(text,"&e", EnergyWatch.CapDisplayOfNumericValue(EnergyWatch.curEnergy))
-		text,_ = string.gsub(text,"&c", EnergyWatch.specPoints)
+		text = EnergyWatch.GetConfigValue(bar.textConfigPoints)
+		text,_ = string.gsub(text,"&ep", percentage)
+		text,_ = string.gsub(text,"&em", EnergyWatch.CapDisplayOfNumericValue(bar.max))
+		text,_ = string.gsub(text,"&e", EnergyWatch.CapDisplayOfNumericValue(bar.cur))
+		text,_ = string.gsub(text,"&c", EnergyWatchBar.specPoints)
 	end
 
-	EnergyWatchStatusBar:SetValue(EnergyWatch.curEnergy)
-	EnergyWatchText:SetText(text);
+	bar.statusBar:SetValue(bar.cur)
+	bar.text:SetText(text);
 end
 
 function EnergyWatch.ShowOrHideBar()
 	if not EnergyWatch.PlayerHasAppropriatePowerType() then
-		EnergyWatchBar:Hide()
+		EnergyWatch.Show(false)
 		return
 	end
 
 	if EnergyWatch.GetConfigValue("showAlways") then
 		--print("Set to always on")
-		EnergyWatchBar:Show()
+		EnergyWatch.Show(true)
 		return
 	end
 	
 	if EnergyWatch.GetConfigValue("showNonDefault") then
 		if not EnergyWatch.PowerTypeAtDefaultValue() then
-			EnergyWatchBar:Show()
+			EnergyWatch.Show(true)
 			return
 		end
 	end
@@ -252,7 +301,7 @@ function EnergyWatch.ShowOrHideBar()
 		--if EnergyWatch.IsStealthed() then
 		if IsStealthed() then
 			--print("I am stealthed")
-			EnergyWatchBar:Show()
+			EnergyWatch.Show(true)
 			return
 		else
 			--print("I am not stealthed")
@@ -263,14 +312,24 @@ function EnergyWatch.ShowOrHideBar()
 	if EnergyWatch.GetConfigValue("showCombat") then
 		if UnitAffectingCombat("player") then
 			--print("I am in combat")
-			EnergyWatchBar:Show()
+			EnergyWatch.Show(true)
 			return
 		else
 			--print("I am not in combat")
 			--EnergyWatchBar:Hide()
 		end
 	end
-	EnergyWatchBar:Hide()
+	EnergyWatch.Show(false)
+end
+
+function EnergyWatch.Show(show)
+	if show then
+		EnergyWatchBar:Show()
+		EnergyWatchHealthBar:Show()
+	else
+		EnergyWatchBar:Hide()
+		EnergyWatchHealthBar:Hide()
+	end
 end
 
 function EnergyWatch.SetLock(newValue)
@@ -285,15 +344,15 @@ function EnergyWatch.SetLock(newValue)
 end
 
 function EnergyWatch.PlayerHasAppropriatePowerType()
-	if EnergyWatch.powerType == 0 and EnergyWatch.GetConfigValue("powerTypeMana") then
+	if EnergyWatchBar.powerType == 0 and EnergyWatch.GetConfigValue("powerTypeMana") then
 		return true
-	elseif EnergyWatch.powerType == 1 and EnergyWatch.GetConfigValue("powerTypeRage") then
+	elseif EnergyWatchBar.powerType == 1 and EnergyWatch.GetConfigValue("powerTypeRage") then
 		return true
-	elseif EnergyWatch.powerType == 2 and EnergyWatch.GetConfigValue("powerTypeFocus") then
+	elseif EnergyWatchBar.powerType == 2 and EnergyWatch.GetConfigValue("powerTypeFocus") then
 		return true
-	elseif EnergyWatch.powerType == 3 and EnergyWatch.GetConfigValue("powerTypeEnergy") then
+	elseif EnergyWatchBar.powerType == 3 and EnergyWatch.GetConfigValue("powerTypeEnergy") then
 		return true
-	elseif EnergyWatch.powerType == 6 and EnergyWatch.GetConfigValue("powerTypeRunicPower") then
+	elseif EnergyWatchBar.powerType == 6 and EnergyWatch.GetConfigValue("powerTypeRunicPower") then
 		return true
 	else
 		return false
@@ -301,12 +360,12 @@ function EnergyWatch.PlayerHasAppropriatePowerType()
 end
 
 function EnergyWatch.PowerTypeAtDefaultValue()
-	if EnergyWatch.powerType == 1 or	--Rage
-	   EnergyWatch.powerType == 6 then	--Runic Power
-		if EnergyWatch.curEnergy == 0 then
+	if EnergyWatchBar.powerType == 1 or	--Rage
+	   EnergyWatchBar.powerType == 6 then	--Runic Power
+		if EnergyWatchBar.cur == 0 then
 			return true
 		end
-	elseif EnergyWatch.curEnergy == EnergyWatch.maxEnergy then
+	elseif EnergyWatchBar.cur == EnergyWatchBar.max then
 		return true
 	end
 
@@ -332,16 +391,11 @@ function EnergyWatch.IsStealthed()
 end
 
 function EnergyWatch.CapDisplayOfNumericValue(value)
-	local strLen = strlen(value);
-	local retString = value;
-	if (EnergyWatch.GetConfigValue("capLargeNumbers")) then
-		if ( strLen > 7 ) then
-			retString = string.sub(value, 1, -7)..SECOND_NUMBER_CAP;
-		elseif ( strLen > 4 ) then
-			retString = string.sub(value, 1, -4)..'.'..string.sub(value, -3, -3)..FIRST_NUMBER_CAP;
-		end
+	if EnergyWatch.GetConfigValue("capLargeNumbers") then
+		return AbbreviateLargeNumbers(value);
+	else
+		return BreakUpLargeNumbers(value);
 	end
-	return retString;
 end
 
 function EnergyWatch.pairsSortedByKeys (t, f)
@@ -361,7 +415,8 @@ end
 function EnergyWatch.SlashCmdHandler(msg, editbox)
 	--print("command is " .. msg .. "\n")
 	if (string.lower(msg) == "config") then
-		InterfaceOptionsFrame_OpenToCategory("EnergyWatch")
+		InterfaceOptionsFrame_OpenToCategory(EnergyWatchConfigFrame)
+		InterfaceOptionsFrame_OpenToCategory(EnergyWatchConfigFrame)
 	elseif (string.lower(msg) == "dumpconfig") then
 		print("With defaults")
 		for k,v in pairs(DefaultConfig) do
@@ -446,6 +501,8 @@ DefaultConfig = {
 	powerTypeRunicPower = true,
 	barText = "&e/&em",
 	barPointsText = "&e/&em (&c)",
+	healthBarText = "&e/&em",
+	--healthBarText = "&ep%",
 	barFontSize = 12,
 	barFont = "Friz Quadrata TT",
 	barTexture = "Default",

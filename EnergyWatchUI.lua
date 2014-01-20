@@ -91,27 +91,139 @@ function EnergyWatchUI.CreateEnergyBar()
 	local energyBarText = energyBar:CreateFontString("EnergyWatchText", "OVERLAY", "EnergyWatchTextFont")
 	energyBarText:SetSize(barWidth + EnergyWatchUI.SizeOffsets.barTextWidth, barHeight + EnergyWatchUI.SizeOffsets.barTextHeight)
 	energyBarText:SetPoint("CENTER", 0, 0)
+	energyBar.text = energyBarText
 
 	local energyBarStatus = CreateFrame("StatusBar", "EnergyWatchStatusBar", energyBar)
 	energyBarStatus:SetSize(barWidth + EnergyWatchUI.SizeOffsets.barStatusWidth, barHeight + EnergyWatchUI.SizeOffsets.barStatusHeight)
 	energyBarStatus:SetPoint("CENTER", 0, 0)
 	energyBarStatus:SetFrameLevel(energyBarStatus:GetParent():GetFrameLevel())
+	energyBar.statusBar = energyBarStatus
 
 	local energyBarTexture = energyBarStatus:CreateTexture("EnergyWatchStatusBarTexture", "BACKGROUND")
 	energyBarTexture:SetTexture(EnergyWatchUI.Textures[EnergyWatch.GetConfigValue("barTexture")].filename)
 	
 	energyBarStatus:SetStatusBarTexture(energyBarTexture)
+	
+	energyBar.textConfig = "barText"
+	energyBar.textConfigPoints = "barPointsText"
+end
+	
+function EnergyWatchUI.CreateHealthBar()
+	local barWidth = EnergyWatch.GetConfigValue("barWidth");
+	local barHeight = EnergyWatch.GetConfigValue("barHeight");
+	
+	local healthBar = CreateFrame("Frame", "EnergyWatchHealthBar", EnergyWatchBar)
+	healthBar:SetSize(barWidth, barHeight)
+	healthBar:SetMovable(false)
+	
+	healthBar:SetPoint("BOTTOM", EnergyWatchBar, "TOP", 0, -11)
+	healthBar:Hide()
+	
+	local healthBarBackground = healthBar:CreateTexture("EnergyWatchHealthBarBackground", "BACKGROUND")
+	healthBarBackground:SetSize(barWidth + EnergyWatchUI.SizeOffsets.barBgWidth, barHeight + EnergyWatchUI.SizeOffsets.barBgHeight)
+	healthBarBackground:SetTexture(0, 0, 0, .5)
+	healthBarBackground:SetPoint("CENTER", 0, 0)
 
+	local healthBarBorder = healthBar:CreateTexture("EnergyWatchHealthBarBorder", "OVERLAY")
+	healthBarBorder:SetWidth(EnergyWatchHealthBarBackground:GetWidth() * EnergyWatchUI.ScaleRatios.barBorderWidth)
+	healthBarBorder:SetHeight(EnergyWatchHealthBarBackground:GetHeight() * EnergyWatchUI.ScaleRatios.barBorderHeight)
+	healthBarBorder:SetTexture("Interface\\Tooltips\\UI-StatusBar-Border")
+	healthBarBorder:SetPoint("CENTER", 0, 0)
+
+	local healthBarFont = CreateFont("EnergyWatchHealthTextFont")
+	healthBarFont:SetFont(EnergyWatchUI.Fonts[EnergyWatch.GetConfigValue("barFont")].filename, EnergyWatch.GetConfigValue("barFontSize"), "OUTLINE")
+
+	local healthBarText = healthBar:CreateFontString("EnergyWatchHealthText", "OVERLAY", "EnergyWatchTextFont")
+	healthBarText:SetSize(barWidth + EnergyWatchUI.SizeOffsets.barTextWidth, barHeight + EnergyWatchUI.SizeOffsets.barTextHeight)
+	healthBarText:SetPoint("CENTER", 0, 0)
+	healthBar.text = healthBarText
+
+	local healthBarStatus = CreateFrame("StatusBar", "EnergyWatchHealthStatusBar", healthBar)
+	healthBarStatus:SetSize(barWidth + EnergyWatchUI.SizeOffsets.barStatusWidth, barHeight + EnergyWatchUI.SizeOffsets.barStatusHeight)
+	healthBarStatus:SetPoint("CENTER", 0, 0)
+	healthBarStatus:SetFrameLevel(healthBarStatus:GetParent():GetFrameLevel())
+	healthBar.statusBar = healthBarStatus
+	
+	local healthBarTexture = healthBarStatus:CreateTexture("EnergyWatchHealthStatusBarTexture", "BACKGROUND")
+	healthBarTexture:SetTexture(EnergyWatchUI.Textures[EnergyWatch.GetConfigValue("barTexture")].filename)
+	
+	healthBarStatus:SetStatusBarTexture(healthBarTexture)
+	healthBarStatus:SetStatusBarColor(0.0, 1.0, 0.0);
+	
+	healthBar.textConfig = "healthBarText"
+	
+	local healthBarMyHealPredictionBar = healthBar:CreateTexture("EnergyWatchHealthBarMyHealPredictionBar", "BACKGROUND", MyHealPredictionBarTemplate)
+	local healthBarOtherHealPredictionBar = healthBar:CreateTexture("EnergyWatchHealthBarOtherHealPredictionBar", "BACKGROUND", OtherHealPredictionBarTemplate)
+	local healthBarHealAbsorbBar = healthBar:CreateTexture("EnergyWatchHealthBarHealAbsorbBar", "BACKGROUND", HealAbsorbBarTemplate)
+	local healthBarHealAbsorbBarLeftShadow = healthBar:CreateTexture("EnergyWatchHealthBarHealAbsorbBarLeftShadow", "BACKGROUND", HealAbsorbBarLeftShadowTemplate)
+	local healthBarHealAbsorbBarRightShadow = healthBar:CreateTexture("EnergyWatchHealthBarHealAbsorbBarRightShadow", "BACKGROUND", HealAbsorbBarRightShadowTemplate)
+
+	local healthBarTotalAbsorbBar = healthBar:CreateTexture("EnergyWatchHealthBarTotalAbsorbBar", "ARTWORK", TotalAbsorbBarTemplate)
+	local healthBarTotalAbsorbBarOverlay = healthBar:CreateTexture("EnergyWatchHealthBarTotalAbsorbBarOverlay", "ARTWORK", TotalAbsorbBarOverlayTemplate, 1)
+
+	local healthBarOverAbsorbGlow = healthBar:CreateTexture("EnergyWatchHealthBarOverAbsorbGlow", "ARTWORK", OverAbsorbGlowTemplate, 1)
+	local healthBarOverHealAbsorbGlow = healthBar:CreateTexture("EnergyWatchHealthBarOverHealAbsorbGlow", "ARTWORK", OverHealAbsorbGlowTemplate, 1)
+	
+	--for Blizzard function UnitFrameHealPredictionBars_Update
+	healthBar.healthbar = healthBarStatus
+	healthBar.unit = "player"
+	healthBar.myHealPredictionBar = healthBarMyHealPredictionBar;
+	healthBar.otherHealPredictionBar = healthBarOtherHealPredictionBar
+	healthBar.totalAbsorbBar = healthBarTotalAbsorbBar;
+	healthBar.totalAbsorbBarOverlay = healthBarTotalAbsorbBarOverlay;
+	healthBar.overAbsorbGlow = healthBarOverAbsorbGlow;
+	healthBar.overHealAbsorbGlow = healthBarOverHealAbsorbGlow;
+	healthBar.healAbsorbBar = healthBarHealAbsorbBar;
+	healthBar.healAbsorbBarLeftShadow = healthBarHealAbsorbBarLeftShadow;
+	healthBar.healAbsorbBarRightShadow = healthBarHealAbsorbBarRightShadow;
+	if ( healthBar.myHealPredictionBar ) then
+		healthBar.myHealPredictionBar:ClearAllPoints();
+	end
+	if ( healthBar.otherHealPredictionBar ) then
+		healthBar.otherHealPredictionBar:ClearAllPoints();
+	end
+	if ( healthBar.totalAbsorbBar ) then
+		healthBar.totalAbsorbBar:ClearAllPoints();
+	end
+	if ( healthBar.totalAbsorbBarOverlay ) then
+		healthBar.totalAbsorbBar.overlay = healthBar.totalAbsorbBarOverlay;
+		healthBar.totalAbsorbBarOverlay:SetAllPoints(healthBar.totalAbsorbBar);
+		healthBar.totalAbsorbBarOverlay.tileSize = 32;
+	end
+	if ( healthBar.overAbsorbGlow ) then
+		healthBar.overAbsorbGlow:ClearAllPoints();
+		healthBar.overAbsorbGlow:SetPoint("TOPLEFT", healthBar.statusBar, "TOPRIGHT", -7, 0);
+		healthBar.overAbsorbGlow:SetPoint("BOTTOMLEFT", healthBar.statusBar, "BOTTOMRIGHT", -7, 0);
+	end
+	if ( healthBar.healAbsorbBar ) then
+		healthBar.healAbsorbBar:ClearAllPoints();
+		healthBar.healAbsorbBar:SetTexture("Interface\\RaidFrame\\Absorb-Fill", true, true);
+	end
+	if ( healthBar.overHealAbsorbGlow ) then
+		healthBar.overHealAbsorbGlow:ClearAllPoints();
+		healthBar.overHealAbsorbGlow:SetPoint("BOTTOMRIGHT", healthBar.statusBar, "BOTTOMLEFT", 7, 0);
+		healthBar.overHealAbsorbGlow:SetPoint("TOPRIGHT", healthBar.statusBar, "TOPLEFT", 7, 0);
+	end
+	if ( healAbsorbBarLeftShadow ) then
+		healthBar.healAbsorbBarLeftShadow:ClearAllPoints();
+	end
+	if ( healAbsorbBarRightShadow ) then
+		healthBar.healAbsorbBarRightShadow:ClearAllPoints();
+	end
+	if (healthBar.statusBar) then
+		healthBar.capNumericDisplay = true;
+	end
 end
 
 --[[ Config UI --]]
 function EnergyWatchUI.CreateConfigMenu()
+	local addonName, addonTitle, addonNotes = GetAddOnInfo('EnergyWatch')
+	
 	local configPanel = CreateFrame("Frame", "EnergyWatchConfigFrame", UIParent)
-	configPanel.name = "EnergyWatch"
+	configPanel.name = addonTitle
 	configPanel.okay = function (self) return end
 	configPanel.cancel = function (self) return end
 
-	local addonName, addonTitle, addonNotes = GetAddOnInfo('EnergyWatch')
 	local configPanelText = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
 	configPanelText:SetPoint('TOPLEFT', 16, -16)
 	configPanelText:SetText(addonTitle)
@@ -123,25 +235,6 @@ function EnergyWatchUI.CreateConfigMenu()
 	configPanelDesc:SetJustifyH('LEFT')
 	configPanelDesc:SetJustifyV('TOP')
 	configPanelDesc:SetText(addonNotes)
-
-	local appearanceConfigPanel = CreateFrame("Frame", "EnergyWatchAppearanceConfigFrame", configPanel)
-	appearanceConfigPanel.name = "Bar Appearance"
-	appearanceConfigPanel.parent = "EnergyWatch"
-	appearanceConfigPanel.okay = function (self) return end
-	appearanceConfigPanel.cancel = function (self) return end
-
-	local appearanceConfigPanelTitle = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
-	appearanceConfigPanelTitle:SetPoint('TOPLEFT', 16, -16)
-	appearanceConfigPanelTitle:SetText(appearanceConfigPanel.name)
-
-	local appearanceConfigPanelDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
-	appearanceConfigPanelDesc:SetHeight(32)
-	appearanceConfigPanelDesc:SetPoint('TOPLEFT', appearanceConfigPanelTitle, 'BOTTOMLEFT', 0, -8)
-	appearanceConfigPanelDesc:SetPoint('RIGHT', appearanceConfigPanel, -32, 0)
-	appearanceConfigPanelDesc:SetNonSpaceWrap(true)
-	appearanceConfigPanelDesc:SetJustifyH('LEFT')
-	appearanceConfigPanelDesc:SetJustifyV('TOP')
-	appearanceConfigPanelDesc:SetText("These options allow you to control the appearance of EnergyWatch's bar")
 
 	local lockBar = EnergyWatchUI.CreateCheckButton("Lock Position", configPanel,"Lock Bar Position", "locked", EnergyWatchUI.LockBarButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
 	lockBar:SetPoint('TOPLEFT', configPanelDesc, 'BOTTOMLEFT', 0, -10)
@@ -166,7 +259,7 @@ function EnergyWatchUI.CreateConfigMenu()
 	powerTypeRunicPower:SetPoint('TOPLEFT', powerTypeFocus, 'BOTTOMLEFT', 0, 0)
 
 	local showOptionDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-	showOptionDesc:SetPoint('TOPLEFT', powerTypeRage, 'BOTTOMLEFT', -2, -10)
+	showOptionDesc:SetPoint('TOPLEFT', powerTypeRage, 'BOTTOMLEFT', -0, -10)
 	showOptionDesc:SetText("Show Energy Watch in these situations:")
 
 	local showOptionHint = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
@@ -188,82 +281,108 @@ function EnergyWatchUI.CreateConfigMenu()
 	showNonDefault:SetPoint('TOPLEFT', showStealth, 'TOPRIGHT', 100, 0)
 	EnergyWatchUI.SetupInverseDependentControl(showAlways, showNonDefault)
 
-	local barAlphaDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-	barAlphaDesc:SetPoint('TOPLEFT', appearanceConfigPanelDesc, 'BOTTOMLEFT', -2, -10)
+	local appearanceDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	appearanceDesc:SetPoint('TOPLEFT', showCombat, 'BOTTOMLEFT', -12, -10)
+	appearanceDesc:SetText("Appearance:")
+
+	local barAlphaDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	barAlphaDesc:SetPoint('TOPLEFT', appearanceDesc, 'BOTTOMLEFT', 2, -10)
 	barAlphaDesc:SetText("Bar Alpha (Opacity): ")
 
-	local barAlphaSlider = EnergyWatchUI.CreateSlider("BarAlphaSlider", appearanceConfigPanel, "barAlpha", EnergyWatchUI.BarAlphaSliderChanged, EnergyWatchUI.BarAlphaSliderEditBoxChanged, 0.0, 1.0, "0.0", "1.0", 0.01, "OptionsSliderTemplate")
+	local barAlphaSlider = EnergyWatchUI.CreateSlider("BarAlphaSlider", configPanel, "barAlpha", EnergyWatchUI.BarAlphaSliderChanged, EnergyWatchUI.BarAlphaSliderEditBoxChanged, 0.0, 1.0, "0.0", "1.0", 0.01, "OptionsSliderTemplate")
 	barAlphaSlider:SetPoint('TOPLEFT', barAlphaDesc, 'BOTTOMLEFT', 10, 0)
 
-	local barHeightDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	local barHeightDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
 	barHeightDesc:SetPoint('TOPLEFT', barAlphaSlider, 'BOTTOMLEFT', -10, -10)
 	barHeightDesc:SetText("Bar Height: ")
 
-	local barHeightSlider = EnergyWatchUI.CreateSlider("barHeightSlider", appearanceConfigPanel, "barHeight", EnergyWatchUI.BarHeightSliderChanged, EnergyWatchUI.BarHeightSliderEditBoxChanged, 25, 50, "25", "50", 1, "OptionsSliderTemplate")
+	local barHeightSlider = EnergyWatchUI.CreateSlider("barHeightSlider", configPanel, "barHeight", EnergyWatchUI.BarHeightSliderChanged, EnergyWatchUI.BarHeightSliderEditBoxChanged, 25, 50, "25", "50", 1, "OptionsSliderTemplate")
 	barHeightSlider:SetPoint('TOPLEFT', barHeightDesc, 'BOTTOMLEFT', 10, 0)
 
-	--local barScaleDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-	--barScaleDesc:SetPoint('TOPLEFT', barAlphaSlider, 'BOTTOMLEFT', -10, -10)
-	--barScaleDesc:SetText("Bar Scale: ")
-
-	--local barScaleSlider = EnergyWatchUI.CreateSlider("BarScaleSlider", appearanceConfigPanel, "barScale", EnergyWatchUI.BarScaleSliderChanged, EnergyWatchUI.BarScaleSliderEditBoxChanged, 0.25, 3.0, "0.25", "3.0", 0.01, "OptionsSliderTemplate")
-	--barScaleSlider:SetPoint('TOPLEFT', barScaleDesc, 'BOTTOMLEFT', 10, 0)
-
-	local barWidthDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	local barWidthDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
 	barWidthDesc:SetPoint('TOPLEFT', barHeightSlider, 'BOTTOMLEFT', -10, -10)
 	barWidthDesc:SetText("Bar Width: ")
 
-	local barWidthSlider = EnergyWatchUI.CreateSlider("barWidthSlider", appearanceConfigPanel, "barWidth", EnergyWatchUI.BarWidthSliderChanged, EnergyWatchUI.BarWidthSliderEditBoxChanged, 100, 300, "100", "300", 1, "OptionsSliderTemplate")
+	local barWidthSlider = EnergyWatchUI.CreateSlider("barWidthSlider", configPanel, "barWidth", EnergyWatchUI.BarWidthSliderChanged, EnergyWatchUI.BarWidthSliderEditBoxChanged, 100, 300, "100", "300", 1, "OptionsSliderTemplate")
 	barWidthSlider:SetPoint('TOPLEFT', barWidthDesc, 'BOTTOMLEFT', 10, 0)
 
-	local barFontSizeDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	local barFontSizeDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
 	barFontSizeDesc:SetPoint('TOPLEFT', barWidthSlider, 'BOTTOMLEFT', -10, -10)
 	barFontSizeDesc:SetText("Font Size: ")
 
-	local barFontSizeSlider = EnergyWatchUI.CreateSlider("barFontSlider", appearanceConfigPanel, "barFontSize", EnergyWatchUI.BarFontSizeSliderChanged, EnergyWatchUI.BarFontSizeSliderEditBoxChanged, 4, 24, "4", "24", 1, "OptionsSliderTemplate")
+	local barFontSizeSlider = EnergyWatchUI.CreateSlider("barFontSlider", configPanel, "barFontSize", EnergyWatchUI.BarFontSizeSliderChanged, EnergyWatchUI.BarFontSizeSliderEditBoxChanged, 4, 24, "4", "24", 1, "OptionsSliderTemplate")
 	barFontSizeSlider:SetPoint('TOPLEFT', barFontSizeDesc, 'BOTTOMLEFT', 10, 0)
 
-   	local barTextureDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+   	local barTextureDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
 	barTextureDesc:SetPoint('TOPLEFT', barAlphaDesc, 'TOPLEFT', 225, 0)
 	barTextureDesc:SetText("Texture: ")
 
-	local barTextureDropDown = EnergyWatchUI.CreateDropDown("barTextureDropDown", appearanceConfigPanel, "barTexture", 150, EnergyWatchUI.Textures, EnergyWatchUI.BarTextureDropDownChanged, "UIDropDownMenuTemplate")
+	local barTextureDropDown = EnergyWatchUI.CreateDropDown("barTextureDropDown", configPanel, "barTexture", 150, EnergyWatchUI.Textures, EnergyWatchUI.BarTextureDropDownChanged, "UIDropDownMenuTemplate")
 	barTextureDropDown:SetPoint('TOPLEFT', barTextureDesc, 'BOTTOMLEFT', 0, 0)
     
-	local barFontDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	local barFontDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
 	barFontDesc:SetPoint('TOPLEFT', barHeightDesc, 'TOPLEFT', 225, 0)
 	barFontDesc:SetText("Font: ")
 
-	local barFontDropDown = EnergyWatchUI.CreateDropDown("barFontDropDown", appearanceConfigPanel, "barFont", 150, EnergyWatchUI.Fonts, EnergyWatchUI.BarFontDropDownChanged, "UIDropDownMenuTemplate")
+	local barFontDropDown = EnergyWatchUI.CreateDropDown("barFontDropDown", configPanel, "barFont", 150, EnergyWatchUI.Fonts, EnergyWatchUI.BarFontDropDownChanged, "UIDropDownMenuTemplate")
 	barFontDropDown:SetPoint('TOPLEFT', barFontDesc, 'BOTTOMLEFT', 0, 0)
+	
+	local miscDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	miscDesc:SetPoint('TOPLEFT', barFontSizeSlider, 'BOTTOMLEFT', -10, -15)
+	miscDesc:SetText("Miscellaneous options:")
+	
+	local capLargeNumbers = EnergyWatchUI.CreateCheckButton("Abbreviate Long Numbers", configPanel,"Show large numbers in abbreviated form, e.g. 54.7k", "capLargeNumbers", EnergyWatchUI.BooleanCheckButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
+	capLargeNumbers:SetPoint('TOPLEFT', miscDesc, 'BOTTOMLEFT', 0, 0)
+	
+	local textConfigPanel = CreateFrame("Frame", "EnergyWatchResourceBarConfigFrame", configPanel)
+	textConfigPanel.name = "Bar Text"
+	textConfigPanel.parent = "EnergyWatch"
+	textConfigPanel.okay = function (self) return end
+	textConfigPanel.cancel = function (self) return end
+	
+	local textConfigPanelTitle = textConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
+	textConfigPanelTitle:SetPoint('TOPLEFT', 16, -16)
+	textConfigPanelTitle:SetText(textConfigPanel.name)
 
+	local textConfigPanelDesc = textConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+	textConfigPanelDesc:SetHeight(32)
+	textConfigPanelDesc:SetPoint('TOPLEFT', textConfigPanelTitle, 'BOTTOMLEFT', 0, -8)
+	textConfigPanelDesc:SetPoint('RIGHT', textConfigPanel, -32, 0)
+	textConfigPanelDesc:SetNonSpaceWrap(true)
+	textConfigPanelDesc:SetJustifyH('LEFT')
+	textConfigPanelDesc:SetJustifyV('TOP')
+	textConfigPanelDesc:SetText("These options allow you to control the appearance of EnergyWatch's resource bar")
 
-	local textEditDesc = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-	textEditDesc:SetPoint('TOPLEFT', barFontSizeSlider, 'BOTTOMLEFT', -10, -50)
-	textEditDesc:SetText("Bar Text")
+	local textEditDesc = textConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	textEditDesc:SetPoint('TOPLEFT', textConfigPanelDesc, 'BOTTOMLEFT', 0, 0)
+	textEditDesc:SetText("Resource Bar Text")
 
-	local textEditBox = EnergyWatchUI.CreateEditBox("Normal", appearanceConfigPanel, "Text to show normally", "barText", EnergyWatchUI.TextEditBoxChanged, "InputBoxTemplate")
+	local textEditBox = EnergyWatchUI.CreateEditBox("ResourceText", textConfigPanel, "Normal", "Text to show normally", "barText", EnergyWatchUI.TextEditBoxChanged, EnergyWatchBar, "InputBoxTemplate")
 	textEditBox:SetPoint('TOPLEFT', textEditDesc, 'BOTTOMLEFT', 80, 0)
 
-	local pointsTextEditBox = EnergyWatchUI.CreateEditBox("With Points", appearanceConfigPanel, "Text to show when you are playing a class/form that has Combo Points/Soul Shards/Holy Power", "barPointsText", EnergyWatchUI.TextEditBoxChanged, "InputBoxTemplate")
+	local pointsTextEditBox = EnergyWatchUI.CreateEditBox("ResourcePointsText", textConfigPanel, "With Points", "Text to show when you are playing a class/form that has Combo Points/Soul Shards/Holy Power", "barPointsText", EnergyWatchUI.TextEditBoxChanged, EnergyWatchBar, "InputBoxTemplate")
 	pointsTextEditBox:SetPoint('TOPLEFT', textEditBox, 'BOTTOMLEFT', 0, 0)
 
-	local textEditHint = appearanceConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
-	textEditHint:SetPoint('TOPLEFT', pointsTextEditBox, 'BOTTOMLEFT', -80, 0)
+	local healthTextEditDesc = textConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	healthTextEditDesc:SetPoint('TOPLEFT', pointsTextEditBox, 'BOTTOMLEFT', -80, -10)
+	healthTextEditDesc:SetText("Health Bar Text")
+	
+	local healthTextEditBox = EnergyWatchUI.CreateEditBox("HealthText", textConfigPanel, "Normal", "Text to show normally", "healthBarText", EnergyWatchUI.TextEditBoxChanged, EnergyWatchHealthBar, "InputBoxTemplate")
+	healthTextEditBox:SetPoint('TOPLEFT', healthTextEditDesc, 'BOTTOMLEFT', 80, 0)
+	
+	local textEditHint = textConfigPanel:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+	textEditHint:SetPoint('TOPLEFT', healthTextEditBox, 'BOTTOMLEFT', -80, 0)
 	textEditHint:SetText("&e = Energy, &em = Max Energy, &ep = Energy Percentage &c = Class Points")
-
-	local capLargeNumbers = EnergyWatchUI.CreateCheckButton("Abbreviate Long Numbers", appearanceConfigPanel,"Show large numbers in abbreviated form, e.g. 54.7k", "capLargeNumbers", EnergyWatchUI.BooleanCheckButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
-	capLargeNumbers:SetPoint('TOPLEFT', textEditHint, 'BOTTOMLEFT', -5, -10)
 	
 	InterfaceOptions_AddCategory(configPanel)
-	InterfaceOptions_AddCategory(appearanceConfigPanel)
+	InterfaceOptions_AddCategory(textConfigPanel)
 end
 
 function EnergyWatchUI.TextEditBoxChanged(self, isUserInput)
 	if isUserInput then
 		--print("Caught change, changing " .. self.configKey .. " to " .. self:GetText())
 		EnergyWatch.SetConfigValue(self.configKey, self:GetText())
-		EnergyWatch.UpdateBar()
+		EnergyWatch.UpdateBar(self.bar)
 	end
 end
 
@@ -305,22 +424,27 @@ end
 function EnergyWatchUI.BarAlphaSliderChanged(self, value)
 	EnergyWatchUI.SliderChanged(self, value)
 
-	EnergyWatchBar:SetAlpha(value)
+	EnergyWatchUI.UpdateAlpha(value)
 end
 
 function EnergyWatchUI.BarAlphaSliderEditBoxChanged(self, isUserInput)
-    --if isUserInput then
+    if isUserInput then
         local value = self:GetNumber()
         EnergyWatchUI.SliderEditBoxChanged(self, value)
 
-        EnergyWatchBar:SetAlpha(value)
-    --end
+		EnergyWatchUI.UpdateAlpha(value)
+    end
+end
+
+function EnergyWatchUI.UpdateAlpha(value)
+    EnergyWatchBar:SetAlpha(value)
+	--EnergyWatchHealthBar:SetAlpha(value)
 end
 
 function EnergyWatchUI.BarScaleSliderChanged(self, value)
 	EnergyWatchUI.SliderChanged(self, value)
 
-	EnergyWatchBar:SetScale(value)
+	EnergyWatchUI.UpdateScale(value)
 end
 
 function EnergyWatchUI.BarScaleSliderEditBoxChanged(self, isUserInput)
@@ -328,18 +452,19 @@ function EnergyWatchUI.BarScaleSliderEditBoxChanged(self, isUserInput)
         local value = self:GetNumber()
         EnergyWatchUI.SliderEditBoxChanged(self, value)
 
-        EnergyWatchBar:SetScale(value)
+        EnergyWatchUI.UpdateScale(value)
     end
+end
+
+function EnergyWatchUI.UpdateScale(value)
+    EnergyWatchBar:SetScale(value)
+	EnergyWatchHealthBar:SetScale(value)
 end
 
 function EnergyWatchUI.BarWidthSliderChanged(self, value)
 	EnergyWatchUI.SliderChanged(self, value)
 
-	EnergyWatchBar:SetWidth(value)
-	EnergyWatchBarBackground:SetWidth(value + EnergyWatchUI.SizeOffsets.barBgWidth)
-	EnergyWatchBarBorder:SetWidth(EnergyWatchBarBackground:GetWidth() * EnergyWatchUI.ScaleRatios.barBorderWidth)
-	EnergyWatchText:SetWidth(value + EnergyWatchUI.SizeOffsets.barTextWidth)
-	EnergyWatchStatusBar:SetWidth(value + EnergyWatchUI.SizeOffsets.barStatusWidth)
+	EnergyWatchUI.UpdateWidth(value)
 end
 
 function EnergyWatchUI.BarWidthSliderEditBoxChanged(self, isUserInput)
@@ -347,22 +472,28 @@ function EnergyWatchUI.BarWidthSliderEditBoxChanged(self, isUserInput)
         local value = self:GetNumber()
         EnergyWatchUI.SliderEditBoxChanged(self, value)
 
-        EnergyWatchBar:SetWidth(value)
-        EnergyWatchBarBackground:SetWidth(value + EnergyWatchUI.SizeOffsets.barBgWidth)
-        EnergyWatchBarBorder:SetWidth(EnergyWatchBarBackground:GetWidth() * EnergyWatchUI.ScaleRatios.barBorderWidth)
-        EnergyWatchText:SetWidth(value + EnergyWatchUI.SizeOffsets.barTextWidth)
-        EnergyWatchStatusBar:SetWidth(value + EnergyWatchUI.SizeOffsets.barStatusWidth)
+        EnergyWatchUI.UpdateWidth(value)
     end
+end
+
+function EnergyWatchUI.UpdateWidth(value)
+	EnergyWatchBar:SetWidth(value)
+	EnergyWatchBarBackground:SetWidth(value + EnergyWatchUI.SizeOffsets.barBgWidth)
+	EnergyWatchBarBorder:SetWidth(EnergyWatchBarBackground:GetWidth() * EnergyWatchUI.ScaleRatios.barBorderWidth)
+	EnergyWatchText:SetWidth(value + EnergyWatchUI.SizeOffsets.barTextWidth)
+	EnergyWatchStatusBar:SetWidth(value + EnergyWatchUI.SizeOffsets.barStatusWidth)
+	
+	EnergyWatchHealthBar:SetWidth(value)
+	EnergyWatchHealthBarBackground:SetWidth(value + EnergyWatchUI.SizeOffsets.barBgWidth)
+	EnergyWatchHealthBarBorder:SetWidth(EnergyWatchHealthBarBackground:GetWidth() * EnergyWatchUI.ScaleRatios.barBorderWidth)
+	EnergyWatchHealthText:SetWidth(value + EnergyWatchUI.SizeOffsets.barTextWidth)
+	EnergyWatchHealthStatusBar:SetWidth(value + EnergyWatchUI.SizeOffsets.barStatusWidth)
 end
 
 function EnergyWatchUI.BarHeightSliderChanged(self, value)
 	EnergyWatchUI.SliderChanged(self, value)
 
-	EnergyWatchBar:SetHeight(value)
-	EnergyWatchBarBackground:SetHeight(value + EnergyWatchUI.SizeOffsets.barBgHeight)
-	EnergyWatchBarBorder:SetHeight(EnergyWatchBarBackground:GetHeight() * EnergyWatchUI.ScaleRatios.barBorderHeight)
-	EnergyWatchText:SetHeight(value + EnergyWatchUI.SizeOffsets.barTextHeight)
-	EnergyWatchStatusBar:SetHeight(value + EnergyWatchUI.SizeOffsets.barStatusHeight)
+	EnergyWatchUI.UpdateHeight(value)
 end
 
 function EnergyWatchUI.BarHeightSliderEditBoxChanged(self, isUserInput)
@@ -370,12 +501,22 @@ function EnergyWatchUI.BarHeightSliderEditBoxChanged(self, isUserInput)
         local value = self:GetNumber()
         EnergyWatchUI.SliderEditBoxChanged(self, value)
 
-        EnergyWatchBar:SetHeight(value)
-        EnergyWatchBarBackground:SetHeight(value + EnergyWatchUI.SizeOffsets.barBgHeight)
-        EnergyWatchBarBorder:SetHeight(EnergyWatchBarBackground:GetHeight() * EnergyWatchUI.ScaleRatios.barBorderHeight)
-        EnergyWatchText:SetHeight(value + EnergyWatchUI.SizeOffsets.barTextHeight)
-        EnergyWatchStatusBar:SetHeight(value + EnergyWatchUI.SizeOffsets.barStatusHeight)
+        EnergyWatchUI.UpdateHeight(value)
     end
+end
+
+function EnergyWatchUI.UpdateHeight(value)
+	EnergyWatchBar:SetHeight(value)
+	EnergyWatchBarBackground:SetHeight(value + EnergyWatchUI.SizeOffsets.barBgHeight)
+	EnergyWatchBarBorder:SetHeight(EnergyWatchBarBackground:GetHeight() * EnergyWatchUI.ScaleRatios.barBorderHeight)
+	EnergyWatchText:SetHeight(value + EnergyWatchUI.SizeOffsets.barTextHeight)
+	EnergyWatchStatusBar:SetHeight(value + EnergyWatchUI.SizeOffsets.barStatusHeight)
+	
+	EnergyWatchHealthBar:SetHeight(value)
+	EnergyWatchHealthBarBackground:SetHeight(value + EnergyWatchUI.SizeOffsets.barBgHeight)
+	EnergyWatchHealthBarBorder:SetHeight(EnergyWatchHealthBarBackground:GetHeight() * EnergyWatchUI.ScaleRatios.barBorderHeight)
+	EnergyWatchHealthText:SetHeight(value + EnergyWatchUI.SizeOffsets.barTextHeight)
+	EnergyWatchHealthStatusBar:SetHeight(value + EnergyWatchUI.SizeOffsets.barStatusHeight)
 end
 
 function EnergyWatchUI.BarFontSizeSliderChanged(self, value)
@@ -403,6 +544,7 @@ end
 
 function EnergyWatchUI.UpdateBarFont(self)
 	EnergyWatchText:SetFont(EnergyWatchUI.Fonts[EnergyWatch.GetConfigValue("barFont")].filename, EnergyWatch.GetConfigValue("barFontSize"),"OUTLINE")
+	EnergyWatchHealthText:SetFont(EnergyWatchUI.Fonts[EnergyWatch.GetConfigValue("barFont")].filename, EnergyWatch.GetConfigValue("barFontSize"),"OUTLINE")
 end
 
 function EnergyWatchUI.BarTextureDropDownChanged(self, arg1, arg2, checked)
@@ -414,6 +556,7 @@ end
 
 function EnergyWatchUI.UpdateBarTexture()
 	EnergyWatchStatusBarTexture:SetTexture(EnergyWatchUI.Textures[EnergyWatch.GetConfigValue("barTexture")].filename)
+	EnergyWatchHealthStatusBarTexture:SetTexture(EnergyWatchUI.Textures[EnergyWatch.GetConfigValue("barTexture")].filename)
 end
 
 function EnergyWatchUI.SliderChanged(self, value)
@@ -458,9 +601,10 @@ function EnergyWatchUI.CreateCheckButton(name, parent, tooltipText, configKey, o
 	return button
 end
 
-function EnergyWatchUI.CreateEditBox(name, parent, tooltipText, configKey, onTextChangeFunc, template)
+function EnergyWatchUI.CreateEditBox(name, parent, text, tooltipText, configKey, onTextChangeFunc, bar, template)
 	local editBox = CreateFrame("EditBox",  parent:GetName() .. name, parent, template)
 	editBox.configKey = configKey
+	editBox.bar = bar
 	editBox:SetAutoFocus(false)
 	editBox:SetSize(200, 32)
 	editBox:SetMaxLetters(128)
@@ -469,7 +613,7 @@ function EnergyWatchUI.CreateEditBox(name, parent, tooltipText, configKey, onTex
 	editBox:SetScript("OnTextChanged", onTextChangeFunc)
 
 	local editBoxLabel = editBox:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-	editBoxLabel:SetText(name .. ":")
+	editBoxLabel:SetText(text .. ":")
 	editBoxLabel:SetPoint('RIGHT', editBox, 'LEFT', -5, 0)
 
 	editBox:SetScript('OnEnter', function(self)
