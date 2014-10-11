@@ -176,6 +176,7 @@ function EnergyWatchUI.CreateHealthBar()
 	healthBar.healAbsorbBar = healthBarHealAbsorbBar;
 	healthBar.healAbsorbBarLeftShadow = healthBarHealAbsorbBarLeftShadow;
 	healthBar.healAbsorbBarRightShadow = healthBarHealAbsorbBarRightShadow;
+	
 	if ( healthBar.myHealPredictionBar ) then
 		healthBar.myHealPredictionBar:ClearAllPoints();
 	end
@@ -209,9 +210,6 @@ function EnergyWatchUI.CreateHealthBar()
 	end
 	if ( healAbsorbBarRightShadow ) then
 		healthBar.healAbsorbBarRightShadow:ClearAllPoints();
-	end
-	if (healthBar.statusBar) then
-		healthBar.capNumericDisplay = true;
 	end
 end
 
@@ -439,26 +437,6 @@ end
 function EnergyWatchUI.UpdateAlpha(value)
     EnergyWatchBar:SetAlpha(value)
 	--EnergyWatchHealthBar:SetAlpha(value)
-end
-
-function EnergyWatchUI.BarScaleSliderChanged(self, value)
-	EnergyWatchUI.SliderChanged(self, value)
-
-	EnergyWatchUI.UpdateScale(value)
-end
-
-function EnergyWatchUI.BarScaleSliderEditBoxChanged(self, isUserInput)
-    if isUserInput then
-        local value = self:GetNumber()
-        EnergyWatchUI.SliderEditBoxChanged(self, value)
-
-        EnergyWatchUI.UpdateScale(value)
-    end
-end
-
-function EnergyWatchUI.UpdateScale(value)
-    EnergyWatchBar:SetScale(value)
-	EnergyWatchHealthBar:SetScale(value)
 end
 
 function EnergyWatchUI.BarWidthSliderChanged(self, value)

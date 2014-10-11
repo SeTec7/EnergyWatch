@@ -33,15 +33,11 @@ function RegisteredEvents:ADDON_LOADED(event, addon, ...)
 
 		EnergyWatchUI.CreateEnergyBar()
 		EnergyWatchUI.CreateHealthBar()
+		EnergyWatchUI.CreateRuneFrame()
 		EnergyWatchUI.CreateConfigMenu()
 		--print("EnergyWatch " .. GetAddOnMetadata("EnergyWatch","Version") .. " Loaded. Type /ew for usage")
 	end
 end
-
---function RegisteredEvents:PLAYER_LOGIN(event)
---	--print("PLAYER_LOGIN fired")
---	EnergyWatch.InitializeBar()
---end
 
 function RegisteredEvents:PLAYER_ENTERING_WORLD(event)
 	--print("PLAYER_ENTERING_WORLD fired")
@@ -155,8 +151,8 @@ function EnergyWatch.InitializeBar()
 	--Get starting display values for energy bar
 	local localizedClass, englishClass = UnitClass("player");
 
+	--print("Initializing bar")
 	EnergyWatchBar:SetAlpha(EnergyWatch.GetConfigValue("barAlpha"))
-	--EnergyWatchBar:SetScale(EnergyWatch.GetConfigValue("barScale"))
 	EnergyWatch.UpdatePowerType()
 	EnergyWatch.UpdateMaxEnergy()
 	EnergyWatch.UpdateMaxHealth()
@@ -164,10 +160,10 @@ function EnergyWatch.InitializeBar()
 	EnergyWatch.UpdateHealth()
 	EnergyWatch.UpdateSpecPoints()
 	EnergyWatch.ShowOrHideBar()
-	
+		
 	--Consider these globals inside the addon, used to rate-limit OnUpdate script
-	EnergyWatch.UPDATE_INTERVAL = 0.09
-	EnergyWatch.TIME_SINCE_LAST_UPDATE = 0
+	--EnergyWatch.UPDATE_INTERVAL = 0.09
+	--EnergyWatch.TIME_SINCE_LAST_UPDATE = 0
 	EnergyWatchAddon:SetScript("OnUpdate", EnergyWatch.OnUpdate)
 end
 
@@ -182,7 +178,7 @@ function EnergyWatch.OnUpdate(self, elapsed)
 		EnergyWatch.UpdateBar(EnergyWatchHealthBar)
 		UnitFrameHealPredictionBars_Update(EnergyWatchHealthBar)
 		EnergyWatch.ShowOrHideBar()
-		EnergyWatch.TIME_SINCE_LAST_UPDATE = EnergyWatch.TIME_SINCE_LAST_UPDATE - EnergyWatch.UPDATE_INTERVAL
+		--EnergyWatch.TIME_SINCE_LAST_UPDATE = EnergyWatch.TIME_SINCE_LAST_UPDATE - EnergyWatch.UPDATE_INTERVAL
 	--end
 end
 
@@ -280,28 +276,27 @@ end
 
 function EnergyWatch.ShowOrHideBar()
 	if not EnergyWatch.PlayerHasAppropriatePowerType() then
-		EnergyWatch.Show(false)
+		EnergyWatch.ShowBars(false)
 		return
 	end
 
 	if EnergyWatch.GetConfigValue("showAlways") then
 		--print("Set to always on")
-		EnergyWatch.Show(true)
+		EnergyWatch.ShowBars(true)
 		return
 	end
 	
 	if EnergyWatch.GetConfigValue("showNonDefault") then
 		if not EnergyWatch.PowerTypeAtDefaultValue() then
-			EnergyWatch.Show(true)
+			EnergyWatch.ShowBars(true)
 			return
 		end
 	end
 
 	if EnergyWatch.GetConfigValue("showStealth") then
-		--if EnergyWatch.IsStealthed() then
 		if IsStealthed() then
 			--print("I am stealthed")
-			EnergyWatch.Show(true)
+			EnergyWatch.ShowBars(true)
 			return
 		else
 			--print("I am not stealthed")
@@ -312,21 +307,23 @@ function EnergyWatch.ShowOrHideBar()
 	if EnergyWatch.GetConfigValue("showCombat") then
 		if UnitAffectingCombat("player") then
 			--print("I am in combat")
-			EnergyWatch.Show(true)
+			EnergyWatch.ShowBars(true)
 			return
 		else
 			--print("I am not in combat")
 			--EnergyWatchBar:Hide()
 		end
 	end
-	EnergyWatch.Show(false)
+	EnergyWatch.ShowBars(false)
 end
 
-function EnergyWatch.Show(show)
+function EnergyWatch.ShowBars(show)
 	if show then
+		--print("Called ShowBars with value true")
 		EnergyWatchBar:Show()
 		EnergyWatchHealthBar:Show()
 	else
+		--print("Called ShowBars with value false")
 		EnergyWatchBar:Hide()
 		EnergyWatchHealthBar:Hide()
 	end
@@ -335,10 +332,10 @@ end
 function EnergyWatch.SetLock(newValue)
 	EnergyWatch.SetConfigValue("locked", newValue)
 	if newValue then
-		print("Energy Watch bar position locked")
+		print("Energy Watch position locked")
 		EnergyWatchBar:EnableMouse(false)
 	else
-		print("Energy Watch bar position unlocked")
+		print("Energy Watch position unlocked")
 		EnergyWatchBar:EnableMouse(true)
 	end
 end
@@ -369,24 +366,6 @@ function EnergyWatch.PowerTypeAtDefaultValue()
 		return true
 	end
 
-	return false
-end
-
-function EnergyWatch.IsStealthed()
-	for i = 1, 40 do
-		local name, rank, icon, count, debuffType, duration, expirationTime, isMine, isStealable = UnitAura("player", i)
-		if (not icon) then
-		--print("Found no icon for buffid "..i)
-			return false
-		end
-		print(name.." "..rank.." "..icon)
-		if icon == "Interface\\Icons\\Ability_Stealth" or 
-		   icon == "Interface\\Icons\\Ability_Ambush" then
-	   		--print("Unit is stealthed")
-			return true
-		end
-	end
-	--print("Unit is not stealthed")
 	return false
 end
 
@@ -475,14 +454,13 @@ function EnergyWatch.SetConfigValue(key, value)
 end
 
 function EnergyWatch.SetConfigToDefaults()
-	print("Resetting config to defaults")
+	print("EnergyWatch config reset to defaults")
 	EnergyWatchConfig = {}
 	setmetatable(EnergyWatchConfig, {__index = DefaultConfig})
 
 	EnergyWatchBar:ClearAllPoints()
 	EnergyWatchBar:SetPoint(EnergyWatch.GetConfigValue("barPosPoint"), EnergyWatch.GetConfigValue("barPosX"), EnergyWatch.GetConfigValue("barPosY"))
 	EnergyWatchBar:SetAlpha(EnergyWatch.GetConfigValue("barAlpha"))
-	--EnergyWatchBar:SetScale(EnergyWatch.GetConfigValue("barScale"))
 	EnergyWatchBar:EnableMouse(true)
 	EnergyWatch.ShowOrHideBar()
 end
@@ -507,7 +485,6 @@ DefaultConfig = {
 	barFont = "Friz Quadrata TT",
 	barTexture = "Default",
 	barAlpha = 1.0,
-	barScale = 1.0,
 	barWidth = 116,
 	barHeight = 26,
 	barPosX = 0,
