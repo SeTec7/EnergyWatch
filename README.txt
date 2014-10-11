@@ -11,6 +11,14 @@ EnergyWatch Reborn : Usage - /ew <option>
 
 
 ChangeLog
+6.0.0
+------------------------
+Added Death Knight Runes to the bar
+Removed deprecated bar scale options
+Switched to using Blizzard's IsStealthed() call
+Updated TOC for 6.0
+
+
 5.4.0
 ------------------------
 Updated TOC for 5.4.0
