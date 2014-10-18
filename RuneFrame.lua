@@ -11,7 +11,7 @@ function EnergyWatchUI.CreateRuneFrame()
 	runeFrame:SetFrameStrata("LOW")
 	runeFrame:SetToplevel(true)
 	runeFrame:SetSize(130, 18)
-	runeFrame:SetPoint("TOP", EnergyWatchBar, "BOTTOM", 2, 4) --, 54, 34)
+	runeFrame:SetPoint("TOP", EnergyWatchBar, "BOTTOM", 4, 4) --, 54, 34)
 	
 	-- Rune order is 1,2,5,6,3,4  which coresponds to Blood, Blood, Frost, Frost, Unholy, Unholy
 	local button1 = CreateFrame("Button", "EWRuneButtonIndividual1", runeFrame, "RuneButtonIndividualTemplate")

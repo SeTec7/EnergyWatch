@@ -159,6 +159,7 @@ function EnergyWatch.InitializeBar()
 	EnergyWatch.UpdateEnergy()
 	EnergyWatch.UpdateHealth()
 	EnergyWatch.UpdateSpecPoints()
+	EnergyWatchHealthBar:Hide()
 	EnergyWatch.ShowOrHideBar()
 		
 	--Consider these globals inside the addon, used to rate-limit OnUpdate script
@@ -275,6 +276,8 @@ function EnergyWatch.UpdateBar(bar)
 end
 
 function EnergyWatch.ShowOrHideBar()
+	EnergyWatch.ShowOrHideSecondaryBars()
+
 	if not EnergyWatch.PlayerHasAppropriatePowerType() then
 		EnergyWatch.ShowBars(false)
 		return
@@ -317,15 +320,31 @@ function EnergyWatch.ShowOrHideBar()
 	EnergyWatch.ShowBars(false)
 end
 
+function EnergyWatch.ShowOrHideSecondaryBars()
+	local localizedClass, englishClass = UnitClass("player")
+	local currentSpec = GetSpecialization()
+	
+	if EnergyWatch.GetConfigValue("showHealthBar") then
+		EnergyWatchHealthBar:Show()
+	else
+		EnergyWatchHealthBar:Hide()
+	end
+	if EnergyWatch.GetConfigValue("showSecondaryBar") then
+		if englishClass == "DEATHKNIGHT" then
+			EWRuneFrame:Show()
+		end
+	else
+		EWRuneFrame:Hide()
+	end
+end
+
 function EnergyWatch.ShowBars(show)
 	if show then
 		--print("Called ShowBars with value true")
 		EnergyWatchBar:Show()
-		EnergyWatchHealthBar:Show()
 	else
 		--print("Called ShowBars with value false")
 		EnergyWatchBar:Hide()
-		EnergyWatchHealthBar:Hide()
 	end
 end
 
@@ -472,6 +491,8 @@ DefaultConfig = {
 	showStealth = true,
 	showCombat = true,
 	showNonDefault = true,
+	showHealthBar = false,
+	showSecondaryBar = true,
 	powerTypeMana = true,
 	powerTypeRage = true,
 	powerTypeFocus = true,

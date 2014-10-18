@@ -237,8 +237,18 @@ function EnergyWatchUI.CreateConfigMenu()
 	local lockBar = EnergyWatchUI.CreateCheckButton("Lock Position", configPanel,"Lock Bar Position", "locked", EnergyWatchUI.LockBarButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
 	lockBar:SetPoint('TOPLEFT', configPanelDesc, 'BOTTOMLEFT', 0, -10)
 
+	local otherBarsOptionDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
+	otherBarsOptionDesc:SetPoint('TOPLEFT', lockBar, 'BOTTOMLEFT', -2, -10)
+	otherBarsOptionDesc:SetText("Show other resource trackers:")
+
+	local showHealthBar = EnergyWatchUI.CreateCheckButton("Health", configPanel,"Show Health Tracker", "showHealthBar", EnergyWatchUI.BooleanCheckButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
+	showHealthBar:SetPoint('TOPLEFT', otherBarsOptionDesc, 'BOTTOMLEFT', 0, 0)
+
+	local showSecondaryBar = EnergyWatchUI.CreateCheckButton("Secondary Resource", configPanel,"Show Secondary Resource Tracker (Death Knight Runes)", "showSecondaryBar", EnergyWatchUI.BooleanCheckButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
+	showSecondaryBar:SetPoint('TOPLEFT', showHealthBar, 'TOPRIGHT', 100, 0)
+	
 	local powerTypeOptionDesc = configPanel:CreateFontString(nil, 'ARTWORK', 'GameFontNormal')
-	powerTypeOptionDesc:SetPoint('TOPLEFT', lockBar, 'BOTTOMLEFT', -2, -10)
+	powerTypeOptionDesc:SetPoint('TOPLEFT', showHealthBar, 'BOTTOMLEFT', -2, -10)
 	powerTypeOptionDesc:SetText("Show Energy Watch when your character is using:")
 
 	local powerTypeEnergy = EnergyWatchUI.CreateCheckButton("Energy", configPanel,"Show Energy Watch when your character is using Energy", "powerTypeEnergy", EnergyWatchUI.BooleanCheckButtonClicked, 'InterfaceOptionsCheckButtonTemplate')
