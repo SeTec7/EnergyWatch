@@ -1,6 +1,6 @@
-## Interface: 60000
+## Interface: 60200
 ## Title: EnergyWatch
-## Version: 6.0.2
+## Version: 6.2.0
 ## Notes: A mobile, configurable bar that tracks primary and secondary character resources
 ## Author: OneWingedAngel
 ## SavedVariablesPerCharacter: EnergyWatchConfig

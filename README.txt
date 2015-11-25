@@ -11,6 +11,11 @@ EnergyWatch Reborn : Usage - /ew <option>
 
 
 ChangeLog
+6.2.0
+------------------------
+Made EnergyWatch hide itself during Pet Battles
+Updated TOC for 6.2.0
+
 6.0.2
 ------------------------
 Added options to enable/disable the new health tracker and secondary resource tracker

@@ -142,6 +142,14 @@ function RegisteredEvents:UNIT_DISPLAYPOWER(event, unit)
 	EnergyWatch.ShowOrHideBar()
 end
 
+function RegisteredEvents:PET_BATTLE_OPENING_START()
+	EnergyWatch.ShowOrHideBar()
+end
+
+function RegisteredEvents:PET_BATTLE_CLOSE()
+	EnergyWatch.ShowOrHideBar()
+end
+
 for k, v in pairs(RegisteredEvents) do
 	EnergyWatchAddon:RegisterEvent(k)
 end
@@ -277,6 +285,11 @@ end
 
 function EnergyWatch.ShowOrHideBar()
 	EnergyWatch.ShowOrHideSecondaryBars()
+	
+	if C_PetBattles.IsInBattle() then
+		EnergyWatch.ShowBars(false)
+		return
+	end
 
 	if not EnergyWatch.PlayerHasAppropriatePowerType() then
 		EnergyWatch.ShowBars(false)
