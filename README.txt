@@ -11,6 +11,11 @@ EnergyWatch Reborn : Usage - /ew <option>
 
 
 ChangeLog
+7.0.3
+------------------------
+Fixed Death Knight Rune tracking to work in 7.0
+Updated TOC for 7.0.3
+
 6.2.0
 ------------------------
 Made EnergyWatch hide itself during Pet Battles
